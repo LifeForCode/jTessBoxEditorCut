@@ -15,31 +15,47 @@
  */
 package net.sourceforge.tessboxeditor;
 
+import net.sourceforge.tess4j.util.ImageIOHelper;
+import net.sourceforge.tessboxeditor.components.ImageIconScalable;
+import net.sourceforge.tessboxeditor.components.JImageLabel;
+import net.sourceforge.tessboxeditor.components.MyTableCellEditor;
+import net.sourceforge.tessboxeditor.components.RowHeaderList;
+import net.sourceforge.tessboxeditor.datamodel.TessBox;
+import net.sourceforge.tessboxeditor.datamodel.TessBoxCollection;
+import net.sourceforge.vietocr.util.Utils;
+import net.sourceforge.vietpad.components.HtmlPane;
+import net.sourceforge.vietpad.components.SimpleFilter;
+import net.sourceforge.vietpad.utilities.LimitedLengthDocument;
+import net.sourceforge.vietpad.utilities.TextUtilities;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.dnd.DropTarget;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.image.*;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.channels.*;
-import java.text.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.table.*;
-import net.sourceforge.tessboxeditor.components.*;
-import net.sourceforge.tessboxeditor.datamodel.*;
-import net.sourceforge.vietocr.util.Utils;
-import net.sourceforge.tess4j.util.ImageIOHelper;
-import net.sourceforge.vietpad.components.*;
-import net.sourceforge.vietpad.utilities.LimitedLengthDocument;
-import net.sourceforge.vietpad.utilities.TextUtilities;
 
 public class Gui extends javax.swing.JFrame {
 
@@ -1392,7 +1408,9 @@ public class Gui extends javax.swing.JFrame {
         if (!this.boxPages.isEmpty()) {
             boxes = this.boxPages.get(imageIndex);
             tableModel.setDataVector(boxes.getTableDataList().toArray(new String[0][5]), headers);
-            ((JImageLabel) this.jLabelImage).setBoxes(boxes);
+            JImageLabel jImageLabel = ((JImageLabel) this.jLabelImage);
+            jImageLabel.setGui(this);
+            jImageLabel.setBoxes(boxes);
         }
     }
 
@@ -1882,6 +1900,16 @@ public class Gui extends javax.swing.JFrame {
                 output.transferFrom(input, 0, 1000000L);
             }
         }
+    }
+
+    public void updateXYData() {
+        List<TessBox> selected = boxes.getSelectedBoxes();
+        if (selected.size() <= 0 || selected.size() > 1)
+            return;
+
+        Rectangle rect = selected.get(0).getRect();
+        jSpinnerX.setValue(rect.x);
+        jSpinnerY.setValue(rect.y);
     }
 
     private void jMenuItemSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveAsActionPerformed

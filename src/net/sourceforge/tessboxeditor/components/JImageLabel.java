@@ -15,23 +15,28 @@
  */
 package net.sourceforge.tessboxeditor.components;
 
+import net.sourceforge.tessboxeditor.Gui;
+import net.sourceforge.tessboxeditor.datamodel.TessBox;
+import net.sourceforge.tessboxeditor.datamodel.TessBoxCollection;
+import net.sourceforge.vietocr.util.Utils;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
-import net.sourceforge.tessboxeditor.datamodel.*;
-import net.sourceforge.vietocr.util.Utils;
 
 public class JImageLabel extends JLabel {
 
+    private Gui gui;
     private TessBoxCollection boxes;
     private JTable table;
     private boolean boxClickAction;
+    private Rectangle pressedRect;
 
     /** Creates a new instance of JImageLabel */
     public JImageLabel() {
         this.addMouseListener(new MouseAdapter() {
 
-            @Override
+          @Override
             public void mousePressed(MouseEvent me) {
                 if (boxes == null) {
                     return;
@@ -44,11 +49,13 @@ public class JImageLabel extends JLabel {
                         repaint();
                         table.clearSelection();
                     }
+                    pressedRect = null;
                 } else {
                     if (!me.isControlDown()) {
                         boxes.deselectAll();
                         table.clearSelection();
                     }
+                    pressedRect = box.getRect();
                     box.setSelected(!box.isSelected()); // toggle selection
                     repaint();
                     // select corresponding table rows
@@ -61,6 +68,23 @@ public class JImageLabel extends JLabel {
                         table.scrollRectToVisible(rect);
                     }
                     boxClickAction = false;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                gui.updateXYData();
+            }
+        });
+
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (pressedRect != null) {
+                    Point point = e.getPoint();
+                    pressedRect.setLocation(point);
+                    repaint();
                 }
             }
         });
@@ -109,6 +133,10 @@ public class JImageLabel extends JLabel {
             }
         }
         return super.contains(x, y);
+    }
+
+    public void setGui(Gui gui) {
+      this.gui = gui;
     }
 
     public void setBoxes(TessBoxCollection boxes) {
