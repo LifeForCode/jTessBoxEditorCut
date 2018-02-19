@@ -1902,7 +1902,7 @@ public class Gui extends javax.swing.JFrame {
         }
     }
 
-    public void updateXYData() {
+    public void updateXYWHData() {
         List<TessBox> selected = boxes.getSelectedBoxes();
         if (selected.size() <= 0 || selected.size() > 1)
             return;
@@ -1910,6 +1910,8 @@ public class Gui extends javax.swing.JFrame {
         Rectangle rect = selected.get(0).getRect();
         jSpinnerX.setValue(rect.x);
         jSpinnerY.setValue(rect.y);
+        jSpinnerW.setValue(rect.width);
+        jSpinnerH.setValue(rect.height);
     }
 
     private void jMenuItemSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemSaveAsActionPerformed
