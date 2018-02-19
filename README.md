@@ -1,4 +1,4 @@
 # jTessBoxEditorCutDrag
-Fork of jTessBoxEditorCut adding a feature to drag-n-drop and resize tess boxes.
+Fork of jTessBoxEditorCut adding a features to drag-n-drop, resize and multiple select tess boxes.
 
-![](/drag_and_resize_tess_boxes.gif?raw=true)
+![](/demo.gif?raw=true)

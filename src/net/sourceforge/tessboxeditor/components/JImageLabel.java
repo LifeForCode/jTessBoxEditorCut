@@ -25,19 +25,22 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Area;
+import java.util.List;
 
 public class JImageLabel extends JLabel {
 
   private Gui gui;
   private TessBoxCollection boxes;
   private JTable table;
+  private MouseAdapter mouseAdapter;
   private boolean boxClickAction;
 
   /**
    * Creates a new instance of JImageLabel
    */
   public JImageLabel() {
-    MouseAdapter mouseAdapter = new MouseAdapter();
+    mouseAdapter = new MouseAdapter();
     addMouseListener(mouseAdapter);
     addMouseMotionListener(mouseAdapter);
   }
@@ -51,7 +54,7 @@ public class JImageLabel extends JLabel {
 
     }
 
-    private Rectangle pressedRect;
+    private Rectangle pressedRect, selectionBounds;
     private MouseState pressedState;
 
     @Override
@@ -68,12 +71,14 @@ public class JImageLabel extends JLabel {
           table.clearSelection();
         }
         pressedRect = null;
+        selectionBounds = new Rectangle(e.getPoint());
       } else {
         if (!e.isControlDown()) {
           boxes.deselectAll();
           table.clearSelection();
         }
         pressedRect = box.getRect();
+        selectionBounds = null;
         pressedState = getMouseState(e);
         box.setSelected(!box.isSelected()); // toggle selection
         repaint();
@@ -92,7 +97,17 @@ public class JImageLabel extends JLabel {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-      gui.updateXYWHData();
+      if (pressedRect != null) gui.updateXYWHData();
+      else {
+        if (selectionBounds != null) {
+          List<TessBox> boxes = JImageLabel.this.boxes.toList();
+          for (TessBox box : boxes)
+            if (selectionBounds.contains(box.getRect())) box.setSelected(true);
+
+          selectionBounds = null;
+        }
+        repaint();
+      }
     }
 
     @Override
@@ -107,17 +122,26 @@ public class JImageLabel extends JLabel {
 
     @Override
     public void mouseDragged(MouseEvent e) {
-      if (canDrag(e)) {
+      if (pressedRect != null && canDrag(e)) {
         if (MouseState.DEFAULT.equals(pressedState)) drag(e);
         else resize(e);
-
-//        gui.updateXYWHData();
-        repaint();
+      } else {
+        if (selectionBounds != null) {
+          Point p = e.getPoint();
+          int x = Math.min(selectionBounds.x, p.x);
+          int y = Math.min(selectionBounds.y, p.y);
+          int width = Math.max(selectionBounds.x - p.x, p.x - selectionBounds.x);
+          int height = Math.max(selectionBounds.y - p.y, p.y - selectionBounds.y);
+          selectionBounds.setLocation(x, y);
+          selectionBounds.setSize(width, height);
+        }
       }
+
+      repaint();
     }
 
     private boolean canDrag(MouseEvent e) {
-      return pressedRect != null && e.getX() >= 0 && e.getY() >= 0;
+      return e.getX() >= 0 && e.getY() >= 0;
     }
 
     private void drag(MouseEvent e) {
@@ -345,6 +369,17 @@ public class JImageLabel extends JLabel {
         g2d.setColor(Color.GREEN);
         resetColor = false;
       }
+    }
+
+    Rectangle selectionBounds = mouseAdapter.selectionBounds;
+    if (selectionBounds != null) {
+      g2d.setColor(new Color(255, 255, 255, 128));
+      Area fill = new Area(new Rectangle(new Point(0, 0), getSize()));
+      fill.subtract(new Area(selectionBounds));
+      g2d.fill(fill);
+      g2d.setColor(Color.BLACK);
+      g2d.draw(selectionBounds);
+      g2d.dispose();
     }
   }
 
